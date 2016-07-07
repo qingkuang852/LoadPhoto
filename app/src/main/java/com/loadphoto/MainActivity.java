@@ -1,6 +1,5 @@
 package com.loadphoto;
 
-import android.graphics.Canvas;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,7 +12,6 @@ import android.widget.ListView;
 
 import com.squareup.picasso.Picasso;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,21 +25,19 @@ public class MainActivity extends AppCompatActivity {
 
         final GridView gridView = (GridView) findViewById(R.id.gridview);
 
-        ListView a;
-        //直接实例化一个LoadPhoto加载器实现LoadFinishCallback
-        new LoadPhoto(this).setLoadFinishCallback(new LoadPhoto.LoadFinishCallback() {
-
-            //这里就能拿到所有图片的文件夹了，每个文件夹里面有图片
+        LoadUtil.getPhotoLoader(this, new ILoadFinish<LoadPhoto.ImageFolder>() {
             @Override
-            public void finish(List<ImageFolder> folderList) {
-                //拿到图片的文件夹之后就给gridview设置adapter,总之这里的folderList就是所有的图片文件夹
-                gridView.setAdapter(new MyAdapter(folderList));
+            public void finish(List<LoadPhoto.ImageFolder> datas) {
+                gridView.setAdapter(new MyAdapter( datas));
             }
         });
 
-
-
-
+        LoadUtil.getContacts(this, new ILoadFinish<LoadContacts.ContactPeople>() {
+            @Override
+            public void finish(List<LoadContacts.ContactPeople> datas) {
+                Log.v("fag", "-------------> " + datas.size());
+            }
+        });
 
     }
 
@@ -50,17 +46,17 @@ public class MainActivity extends AppCompatActivity {
      */
     class MyAdapter extends BaseAdapter{
 
-        private List<ImageFolder> folderList;
+        private List<LoadPhoto.ImageFolder> folderList;
 
         private ArrayList<String> images;
 
-        public MyAdapter(List<ImageFolder> folderList){
+        public MyAdapter(List<LoadPhoto.ImageFolder> folderList){
             this.folderList = folderList;
 
             //如果是要在一个界面显示所有图片的话，可以把每个文件夹的图片都拿出来放在一个list里面
             images = new ArrayList<>();
             for (int i = 0; i < folderList.size(); i++) {
-                ImageFolder folder = folderList.get(i);
+                LoadPhoto.ImageFolder folder = folderList.get(i);
                 for (int j = 0; j < folder.getImages().size(); j++) {
                     String path = folder.getImages().get(j);
                     images.add(path);

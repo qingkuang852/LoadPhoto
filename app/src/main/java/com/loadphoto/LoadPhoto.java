@@ -4,7 +4,6 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 
 
@@ -15,7 +14,7 @@ import java.util.List;
 /**
  * Created by wenming on 2016/3/17.
  */
-public class LoadPhoto implements LoaderManager.LoaderCallbacks<Cursor>{
+public class LoadPhoto extends LoadResource {
     //读取图片文件的参数
     private static final String STORE_IMAGES[] = {
             MediaStore.Images.Media.DATA,
@@ -24,24 +23,20 @@ public class LoadPhoto implements LoaderManager.LoaderCallbacks<Cursor>{
             MediaStore.Images.Media._ID
     };
 
-    public FragmentActivity activity;
-    private LoadFinishCallback loadFinishCallback;
+//    private LoadFinishCallback loadFinishCallback;
+
     public LoadPhoto(FragmentActivity activity){
-        this.activity = activity;
+        super(activity);
+
+    }
+
+    @Override
+    public void register() {
         activity.getSupportLoaderManager().initLoader(0,null,this);
     }
 
     @Override
-    public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        return new CursorLoader(activity, MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                STORE_IMAGES, null, null, STORE_IMAGES[2] + " DESC");
-    }
-
-    @Override
-    public void onLoadFinished(android.support.v4.content.Loader<Cursor> loader, Cursor data) {
-        if (data==null){
-            return;
-        }
+    public List<ImageFolder> getDatas(Cursor data) {
         List<ImageFolder> folderList = new ArrayList<>();
         int count = data.getCount();
         if (count>0){
@@ -64,20 +59,40 @@ public class LoadPhoto implements LoaderManager.LoaderCallbacks<Cursor>{
                 }
             }while (data.moveToNext());
         }
-        loadFinishCallback.finish(folderList);
-    }
-
-    public void setLoadFinishCallback(LoadFinishCallback loadFinishCallback) {
-        this.loadFinishCallback = loadFinishCallback;
+        return folderList;
     }
 
     @Override
-    public void onLoaderReset(android.support.v4.content.Loader<Cursor> loader) {
-
+    public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        return new CursorLoader(activity, MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                STORE_IMAGES, null, null, STORE_IMAGES[2] + " DESC");
     }
 
-    public interface LoadFinishCallback{
-        void finish(List<ImageFolder> folderList);
+    /**
+     * 图片文件夹类
+     */
+    public class ImageFolder {
+        //文件夹名字
+        public String name;
+        //文件夹的路径
+        public String path;
+        //文件夹里面的所有图片的路径
+        public List<String> images;
+
+        @Override
+        public boolean equals(Object o) {
+            try {
+                ImageFolder other = (ImageFolder) o;
+                return this.path.equalsIgnoreCase(other.path);
+            }catch (ClassCastException e){
+                e.printStackTrace();
+            }
+            return super.equals(o);
+        }
+
+        public List<String> getImages() {
+            return images;
+        }
     }
 }
 
